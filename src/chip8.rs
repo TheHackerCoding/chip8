@@ -1,6 +1,6 @@
-use arrayvec::ArrayVec;
+use smallvec::{smallvec, SmallVec};
 
-const chip8_fontset: ArrayVec<u8, 80> = ArrayVec::from([
+const CHIP8_FONTSET: SmallVec<[u8; 80]> = SmallVec::from_const([
     0xF0, 0x90, 0x90, 0x90, 0xF0, //0
     0x20, 0x60, 0x20, 0x20, 0x70, //1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, //2
@@ -16,33 +16,45 @@ const chip8_fontset: ArrayVec<u8, 80> = ArrayVec::from([
     0xF0, 0x80, 0x80, 0x80, 0xF0, //C
     0xE0, 0x90, 0x90, 0x90, 0xE0, //D
     0xF0, 0x80, 0xF0, 0x80, 0xF0, //E
-    0xF0, 0x80, 0xF0, 0x80, 0x80  //F
+    0xF0, 0x80, 0xF0, 0x80, 0x80, //F
 ]);
 
 pub struct Chip8 {
     opcode: u16,
     // limit is 4096
-    memory: ArrayVec<u8, 4096>,
-    V: Vec<u8>,
+    memory: SmallVec<[u8; 4096]>,
+    // limit is 16
+    V: SmallVec<[u8; 16]>,
     I: u8,
-    pc: u8,
+    pc: u16,
     // limit is 2048
-    gfx: ArrayVec<u8, 2048>,
+    gfx: SmallVec<[u8; 2048]>,
     delay_timer: u8,
     sound_timer: u8,
     // limit is 16
-    stack: ArrayVec<u8, 16>,
+    stack: SmallVec<[u8; 16]>,
     sp: u8,
     // limit is 16
-    key: ArrayVec<u8, 16>
+    key: SmallVec<[u8; 16]>,
+    drawFlag: bool,
 }
 
 impl Chip8 {
     pub fn init() -> Chip8 {
-        let core = Chip8 {
+        let memory: SmallVec<[u8; 4096]> = SmallVec::from_vec(CHIP8_FONTSET.to_vec());
+        Chip8 {
             opcode: 0,
+            memory,
+            V: smallvec![0; 16],
+            I: 0,
             pc: 0x200,
-            memory: ArrayVec::from(vec![0; 4096])
+            gfx: smallvec![0; 2048],
+            delay_timer: 0,
+            sound_timer: 0,
+            stack: smallvec![0; 16],
+            sp: 0,
+            key: smallvec![0; 16],
+            drawFlag: true,
         }
     }
 }
