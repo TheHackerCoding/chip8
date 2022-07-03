@@ -8,3 +8,4 @@ version = "0.1.0"
 [dependencies]
 rand = "0.8.5"
 smallvec = {version = "1.8.0", features = ["const_new"]}
+raylib = "3.7.0"

@@ -1,6 +1,6 @@
 use self::utils::random;
 use smallvec::{smallvec, SmallVec};
-use std::{error::Error, fs};
+use std::{error::Error, fs, process::exit};
 #[path = "./utils.rs"]
 mod utils;
 
@@ -32,7 +32,7 @@ pub struct Chip8 {
     I: u8,
     pc: u16,
     // limit is 2048
-    gfx: SmallVec<[u8; 2048]>,
+    pub gfx: SmallVec<[u8; 2048]>,
     delay_timer: u8,
     sound_timer: u8,
     // limit is 16
@@ -40,12 +40,14 @@ pub struct Chip8 {
     sp: u8,
     // limit is 16
     key: SmallVec<[u8; 16]>,
-    drawFlag: bool,
+    pub drawFlag: bool,
 }
 
 impl Chip8 {
     pub fn init() -> Chip8 {
-        let memory: SmallVec<[u8; 4096]> = SmallVec::from_vec(CHIP8_FONTSET.to_vec());
+        let mut memory: SmallVec<[u8; 4096]> = SmallVec::from_vec(CHIP8_FONTSET.to_vec());
+        // smh i could probably do a better job at this
+        unsafe { memory.set_len(4096) }
         Chip8 {
             opcode: 0,
             memory,
@@ -91,7 +93,7 @@ impl Chip8 {
         //    drawFlag,
         //} = self;
 
-        opcode = (memory[pc as usize] << 8 | memory.get((pc + 1) as usize).unwrap()) as u16;
+        opcode = ((((memory[pc as usize]) as u16) << 8) as u8 | memory[(pc + 1) as usize]) as u16;
 
         match opcode & 0xF000 {
             0x0000 => match opcode & 0x000F {
@@ -435,10 +437,15 @@ impl Chip8 {
     pub fn load_application(&mut self, filename: &str) {
         let contents = fs::read(filename).expect("Unable to read/get file");
         let c_length = contents.len();
-        if (4096 - 512 > c_length) {
+        println!("Filesize: {}", c_length);
+        if 4096 - 512 > c_length {
             for i in 0..c_length {
+                //println!("{}", i);
                 self.memory[i + 512] = contents[i];
             }
+        } else {
+            println!("Error: ROM too big for memory");
+            exit(1);
         }
     }
 }
